@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>wikipoetry trefles</title>
+<style>
+body {
+  font-family: "Helvetica", sans-serif;
+  max-width: 800px;
+  margin: 2em auto;
+  background: #fafafa;
+  color: #222;
+  padding: 1em;
+}
+button {
+  font-family: "Helvetica", sans-serif;
+  font-size: 1.2em;
+  padding: 12px 24px;
+  margin: 1em auto;
+  display: block;
+  cursor: pointer;
+}
+#poem {
+  font-family: "Helvetica", sans-serif;
+  white-space: pre-line;
+  margin-top: 2em;
+  font-size: 1.1em;
+  border-top: 1px solid #ccc;
+  padding-top: 1em;
+  min-height: 10em;
+}
+</style>
+</head>
+<body>
+
+<h1>wikipoetry trefles</h1>
+<button onclick="generatePoem()">créer un poème</button>
+<div id="poem">cliquez sur le bouton pour générer un poème...</div>
+
+<script>
+// Pages Wikipédia
+const wikiPages = [
+  { lang: 'fr', title: 'Trèfle' },
+  { lang: 'en', title: 'Clover' }
+];
+
+// Liste de mots poétiques
+const poeticWords = ['doucement', 'là-bas', 'comme un rêve', 'en silence', 'étoile', 'brume', 'suspirant', 'à l’horizon', 'tel un écho', 'dans la lumière'];
+
+// Récupération du texte brut depuis Wikipédia
+async function fetchWikiContent(lang, title) {
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&origin=*&prop=extracts&explaintext&format=json&titles=${title}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const pages = data.query.pages;
+  const page = Object.values(pages)[0];
+  return page.extract;
+}
+
+// Découpe le texte en fragments courts (2 à 12 mots)
+function textToFragments(text) {
+  let sentences = text.split(/[.!?]/).map(s => s.trim()).filter(s => s.length > 0);
+  let fragments = [];
+
+  sentences.forEach(sentence => {
+    let parts = sentence.split(/[,;:]/).map(p => p.trim()).filter(p => p.length > 0);
+    parts.forEach(part => {
+      let words = part.split(' ').filter(w => w.length > 0);
+      for (let i = 0; i < words.length; i += 2) {
+        let fragLength = Math.min(Math.floor(Math.random() * 11) + 2, words.length - i); // 2 à 12 mots
+        let fragment = words.slice(i, i + fragLength).join(' ');
+        fragments.push(fragment);
+      }
+    });
+  });
+
+  return fragments;
+}
+
+// Mélange aléatoire des mots
+function shuffleWords(fragment) {
+  let words = fragment.split(' ');
+  for (let i = words.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [words[i], words[j]] = [words[j], words[i]];
+  }
+  return words.join(' ');
+}
+
+// Approximation de rime
+function approximateRhyme(word, fragments) {
+  const lastChar = word.slice(-2);
+  const rhymes = fragments.filter(f => f.slice(-2) === lastChar && f !== word);
+  if (rhymes.length > 0) return rhymes[Math.floor(Math.random() * rhymes.length)];
+  return null;
+}
+
+// Filtre des fragments contenant trop de noms propres
+function filterProperNouns(fragments) {
+  return fragments.filter(fragment => {
+    const words = fragment.split(' ').filter(w => w.length > 0);
+    let capitalCount = 0;
+    words.forEach((w, i) => {
+      if (w[0] === w[0].toUpperCase() && w.match(/[A-ZÀ-Ÿ]/) && i !== 0) {
+        capitalCount++;
+      }
+    });
+    return (capitalCount / words.length) < 0.5;
+  });
+}
+
+// Génération du poème
+async function generatePoem() {
+  let allFragments = [];
+
+  for (let page of wikiPages) {
+    try {
+      const content = await fetchWikiContent(page.lang, page.title);
+      let fragments = textToFragments(content);
+      allFragments.push(...fragments);
+    } catch(e) {
+      console.error("Erreur en récupérant la page :", page.title, e);
+    }
+  }
+
+  allFragments = filterProperNouns(allFragments);
+
+  let poem = '';
+  let lineCount = Math.floor(Math.random() * 5) + 6; // 6 à 10 lignes
+
+  for (let i = 0; i < lineCount; i++) {
+    if (allFragments.length === 0) break;
+    let idx = Math.floor(Math.random() * allFragments.length);
+    let fragment = allFragments[idx];
+
+    if (Math.random() > 0.5) fragment = shuffleWords(fragment);
+
+    if (Math.random() > 0.6) {
+      if (Math.random() > 0.5) {
+        fragment = `${poeticWords[Math.floor(Math.random() * poeticWords.length)]}, ${fragment}`;
+      } else {
+        fragment = `${fragment}, ${poeticWords[Math.floor(Math.random() * poeticWords.length)]}`;
+      }
+    }
+
+    if (i > 0) {
+      const lastLine = poem.split('\n').filter(l => l.length > 0).slice(-1)[0];
+      const lastWord = lastLine.split(' ').slice(-1)[0];
+      const rhyme = approximateRhyme(lastWord, allFragments);
+      if (rhyme && Math.random() > 0.5) fragment += ', ' + rhyme;
+    }
+
+    poem += fragment + '\n';
+  }
+
+  document.getElementById('poem').textContent = poem;
+}
+
+// Événement sur le bouton
+document.getElementById('generate').addEventListener('click', generatePoem);
+</script>
+
+</body>
+</html>
