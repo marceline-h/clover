@@ -7,35 +7,56 @@
 body {
   font-family: "Helvetica", sans-serif;
   max-width: 800px;
-  margin: 2em auto;
-  background: #fafafa;
-  color: #222;
+  margin: 1em auto;
   padding: 1em;
+  color: #000;
+  position: relative; /* nécessaire pour ::before */
 }
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+
+  background-image: url("clover.jpg"); /* ton image de fond */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+h1 {
+  font-weight: normal;
+}
+
 button {
   font-family: "Helvetica", sans-serif;
   font-size: 1.2em;
   padding: 12px 24px;
-  margin: 1em auto;
+  margin: 0.5em auto;
   display: block;
   cursor: pointer;
+  border: none;
+  background: rgba(255, 255, 255, 0.7); /* bouton semi-transparent */
+  border-radius: 8px;
 }
+
 #poem {
-  font-family: "Helvetica", sans-serif;
   white-space: pre-line;
-  margin-top: 2em;
+  margin-top: 1em;
   font-size: 1.1em;
-  border-top: 1px solid #ccc;
-  padding-top: 1em;
+  padding-top: 0.5em;
   min-height: 10em;
+  color: #000; /* texte noir */
+  border: none;
+  background: none;
 }
 </style>
 </head>
 <body>
-
 <h1>wikipoetry trefles</h1>
-<button onclick="generatePoem()">créer un poème</button>
-<div id="poem">cliquez sur le bouton pour générer un poème...</div>
+<button id="generate" onclick="generatePoem()">créer un poème</button>
+<div id="poem">cliquer sur le bouton pour générer un poème...</div>
 
 <script>
 // Pages Wikipédia
